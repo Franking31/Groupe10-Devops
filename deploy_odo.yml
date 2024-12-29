@@ -1,0 +1,68 @@
+---
+- name: Deploy Odoo with Docker Compose
+  hosts: localhost
+  become: yes
+  tasks:
+
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+      become: true
+
+    - name: Install Docker Compose
+      get_url:
+        url: "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
+        dest: /usr/local/bin/docker-compose
+        mode: '0755'
+
+    - name: Clone Odoo repository
+      git:
+        repo: 'https://github.com/odoo/odoo.git'
+        dest: '/opt/odoo'
+        version: '16.0'
+        force: yes
+
+    - name: Create Docker Compose file
+      copy:
+        dest: "/opt/odoo/docker-compose.yml"
+        content: |
+          version: '3.8'
+          services:
+            db:
+              image: postgres:13
+              environment:
+                POSTGRES_DB: odoo
+                POSTGRES_USER: odoo
+                POSTGRES_PASSWORD: odoo
+              volumes:
+                - ./data/postgres:/var/lib/postgresql/data
+              networks:
+                - odoo_network
+
+            odoo:
+              image: odoo:16.0
+              environment:
+                - HOST=db
+                - USER=odoo
+                - PASSWORD=odoo
+                - DB=odoo
+              ports:
+                - "8069:8069"
+              volumes:
+                - ./data/odoo:/mnt/extra-addons
+                - ./odoo.conf:/etc/odoo/odoo.conf
+              depends_on:
+                - db
+              networks:
+                - odoo_network
+
+          networks:
+            odoo_network:
+              driver: bridge
+
+    - name: Run Docker Compose to deploy Odoo
+      command:
+        cmd: docker-compose up -d
+        chdir: /opt/odoo
+

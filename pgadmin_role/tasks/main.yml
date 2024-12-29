@@ -1,0 +1,12 @@
+---
+---
+- name: Deploy pgAdmin using Docker Compose
+  template:
+    src: docker-compose-pgadmin.yml
+    dest: /opt/pgadmin/docker-compose.yml
+
+- name: Start pgAdmin with Docker Compose
+  command: docker-compose up -d
+  args:
+    chdir: /opt/pgadmin
+# tasks file for pgadmin_role

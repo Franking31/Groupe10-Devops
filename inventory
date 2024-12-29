@@ -1,0 +1,10 @@
+[odoo_servers]
+localhost ansible_connection=local
+
+[db_servers]
+localhost ansible_connection=local
+
+[all:vars]
+postgres_user=odoo
+postgres_password=odoo
+postgres_db=odoo
